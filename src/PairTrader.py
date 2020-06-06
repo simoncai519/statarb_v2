@@ -88,9 +88,10 @@ class PairTrader:
 
             if self.is_window_end:
                 cointegrated_pairs: List[CointegratedPair] = self.cointegrator.generate_pairs(clusters,
-                                                                                              self.hurst_exp_threshold)
+                                                                                              self.hurst_exp_threshold,
+                                                                                              self.current_window)
             else:
-                cointegrated_pairs: List[CointegratedPair] = self.cointegrator.get_previous_cointegrated_pairs()
+                cointegrated_pairs: List[CointegratedPair] = self.cointegrator.get_previous_cointegrated_pairs(self.current_window)
 
             decisions = self.dm.make_decision(cointegrated_pairs)
 
@@ -141,7 +142,7 @@ if __name__ == '__main__':
         backtest_start=date(2017, 1, 2),  # must be a trading day
         trading_window_length=timedelta(days=60),  # 63 trading days per quarter
         max_active_pairs=10,
-        backtest_end=date(2018, 3, 29),
+        backtest_end=date(2018, 4, 1),
         adf_confidence_level=AdfPrecisions.ONE_PCT,
         max_mean_rev_time=30,
         entry_z=2,
