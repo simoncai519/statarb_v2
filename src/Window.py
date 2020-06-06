@@ -45,7 +45,9 @@ class Window:
         return window_trading_days
 
     def evolve(self):
-        self.window_start= self.window_start + timedelta(days=1)
+        self.window_start = self.window_start + timedelta(days=1)
+        while self.window_start not in self.repository.all_dates:
+            self.window_start= self.window_start + timedelta(days=1)
         return Window(window_start=self.window_start,
                       trading_win_len=self.window_length,
                       repository=self.repository)
