@@ -106,9 +106,10 @@ class Cointegrator:
                                                      self.adf_confidence_level, hl_test, self.max_mean_rev_time,
                                                      he_test, hurst_exp_threshold)
 
+            target_coint = 150
             if is_cointegrated:
                 n_cointegrated += 1
-                print(n_cointegrated, "/ 150 cointegrated")
+                print(n_cointegrated, " / ", target_coint, "cointegrated")
                 r_x = self.__log_returner(t1)
                 mu_x_ann = float(250 * np.mean(r_x))
                 sigma_x_ann = float(250 ** 0.5 * np.std(r_x))
@@ -121,7 +122,7 @@ class Cointegrator:
                                                                    hl_test, ou_mean, ou_std, ou_diffusion_v,
                                                                    recent_dev, recent_dev_scaled, cointegration_rank))
 
-                if n_cointegrated == 150:
+                if n_cointegrated == target_coint:
                     # logic to be fixed and made more efficient by: 1) having proper
                     # clustering algorithm; 2) not running clustering and cointegration
                     # everyday 3) taking best 10 pairs according to some score

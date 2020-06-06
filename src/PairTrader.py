@@ -22,7 +22,7 @@ class PairTrader:
                  max_mean_rev_time: int = 15,
                  hurst_exp_threshold: float = 0.35,
                  entry_z: float = 1.5,
-                 emergency_z: float = 3,
+                 emergency_delta_z: float = 3,
                  exit_z: float = 0.5):
         # If end_date is None, run for the entirety of the dataset
         # Window is the lookback period (from t=window_length to t=0 (today) over which we analyse data
@@ -41,8 +41,8 @@ class PairTrader:
 
         # if the pair crosses this boundary, we don't believe their cointegrated anymore
         # - close the position at a loss
-        # require: emergency_z > entry_z > exit_z
-        self.emergency_z: float = emergency_z
+        # require: emergency_z+entry_z > entry_z > exit_z
+        self.emergency_delta_z: float = emergency_delta_z
 
         # Last SNP date, hard coded for now...
         self.backtest_end = date(year=2020, month=12, day=31) if backtest_end is None else backtest_end
@@ -76,7 +76,7 @@ class PairTrader:
         self.dm = SignalGenerator(self.portfolio,
                                   entry_z,
                                   exit_z,
-                                  emergency_z
+                                  emergency_delta_z
                                   )
 
     def trade(self):
@@ -145,5 +145,5 @@ if __name__ == '__main__':
         max_mean_rev_time=30,
         entry_z=2,
         exit_z=0.5,
-        emergency_z=3.5,
+        emergency_delta_z=1.5,
     ).trade()
