@@ -81,14 +81,24 @@ class SignalGenerator:
         # loop through all invested position
         for position in positions:
             position_pair = (position.asset1, position.asset2)
-            # if pair not cointegrated, or position passed time limit, exit position
-            if  (position_pair not in coint_pairs) or (today > (position.init_date + timedelta(self.time_stop_loss))):
+            # if pair not cointegrated, exit position
+            if  position_pair not in coint_pairs:
                 decisions.append(
                     Decision(
                         position=position,
                         old_action=position.position_type,
-                        new_action=PositionType.NOT_INVESTED)
-                )
+                        new_action=PositionType.NOT_INVESTED))
+            # if position passed time limit, exit position
+            # if recent_dev is still high, position will be opened again tmr, so don't exit in such situation
+            elif today > (position.init_date + timedelta(self.time_stop_loss)):
+                idx = coint_pairs.index(position_pair)
+                coint_pair = pairs[idx]
+                if abs(coint_pair.recent_dev_scaled) < self.entry_z:
+                    decisions.append(
+                        Decision(
+                            position=position,
+                            old_action=position.position_type,
+                            new_action=PositionType.NOT_INVESTED))
             # if still cointegrated, check if need to exit
             else:
                 idx = coint_pairs.index(position_pair)

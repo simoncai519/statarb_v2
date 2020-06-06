@@ -250,8 +250,8 @@ class Cointegrator:
             t2_last_2_prices = self.current_window.get_data(universe=Universes.SNP,
                                                             tickers=[coint_pair.pair[1]],
                                                             features=[Features.CLOSE]).iloc[-2:, :]
-            t1_latest_ret = np.log(float(t1_last_2_prices.iloc[-1,:])/float(t1_last_2_prices.iloc[-2,:]))
-            t2_latest_ret = np.log(float(t2_last_2_prices.iloc[-1,:])/float(t2_last_2_prices.iloc[-2,:]))
+            t1_latest_ret = np.log(float(t1_last_2_prices.iloc[-1,:]))
+            t2_latest_ret = np.log(float(t2_last_2_prices.iloc[-1,:]))
             coint_pair.recent_dev = t2_latest_ret - coint_pair.reg_output.predict(np.array(t1_latest_ret).reshape(-1,1))
             coint_pair.recent_dev_scaled = (coint_pair.recent_dev - coint_pair.ou_mean)/coint_pair.ou_std
 
