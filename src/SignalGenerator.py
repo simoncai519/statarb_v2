@@ -27,6 +27,10 @@ class SignalGenerator:
         self.exit_z: float = exit_z
         self.emergency_delta_z: float = emergency_delta_z
         self.time_stop_loss = 30
+        self.open_count = 0
+        self.natural_close_count = 0
+        self.emergency_close_count = 0
+        self.time_stop_loss_count = 0
 
     def make_decision(self, pairs: List[CointegratedPair]):
 
@@ -57,6 +61,7 @@ class SignalGenerator:
                             new_action=PositionType.LONG,
                         )
                     )
+                    self.open_count += 1
 
                 elif coint_pair.recent_dev_scaled < - self.entry_z:
                     # s = short pair = long y short x
@@ -77,6 +82,7 @@ class SignalGenerator:
 
                         )
                     )
+                    self.open_count += 1
 
         # loop through all invested position
         for position in positions:
@@ -88,60 +94,72 @@ class SignalGenerator:
                         position=position,
                         old_action=position.position_type,
                         new_action=PositionType.NOT_INVESTED))
-            # if position passed time limit, exit position
-            # if recent_dev is still high, position will be opened again tmr, so don't exit in such situation
-            elif today > (position.init_date + timedelta(self.time_stop_loss)):
+                self.emergency_close_count += 1
+
+            else:
                 idx = coint_pairs.index(position_pair)
                 coint_pair = pairs[idx]
-                if abs(coint_pair.recent_dev_scaled) < self.entry_z:
+                # if position passed time limit, exit position
+                # if recent_dev is still high, position will be opened again tmr, so don't exit in such situation
+                if today > (position.init_date + timedelta(self.time_stop_loss)) and (abs(coint_pair.recent_dev_scaled) < self.entry_z):
                     decisions.append(
                         Decision(
                             position=position,
                             old_action=position.position_type,
                             new_action=PositionType.NOT_INVESTED))
-            # if still cointegrated, check if need to exit
-            else:
-                idx = coint_pairs.index(position_pair)
-                coint_pair = pairs[idx]
-                if position.position_type is PositionType.LONG:
-                    natural_close_required = coint_pair.recent_dev_scaled < self.exit_z
-                    emergency_close_required = coint_pair.recent_dev_scaled > (self.emergency_delta_z + position.init_z)
+                    self.time_stop_loss_count += 1
+                # else, check if need to exit
+                else:
+                    if position.position_type is PositionType.LONG:
+                        natural_close_required = coint_pair.recent_dev_scaled < self.exit_z
+                        emergency_close_required = coint_pair.recent_dev_scaled > (self.emergency_delta_z + position.init_z)
 
-                    if natural_close_required or emergency_close_required:
-                        decisions.append(
-                            Decision(
-                                position=position,
-                                old_action=PositionType.LONG,
-                                new_action=PositionType.NOT_INVESTED)
-                        )
-                    else:
-                        # no need to close, so keep the position open
-                        decisions.append(
-                            Decision(
-                                position=position,
-                                old_action=PositionType.LONG,
-                                new_action=PositionType.LONG)
-                        )
+                        if natural_close_required or emergency_close_required:
+                            decisions.append(
+                                Decision(
+                                    position=position,
+                                    old_action=PositionType.LONG,
+                                    new_action=PositionType.NOT_INVESTED)
+                            )
+                            if natural_close_required:
+                                self.natural_close_count += 1
+                            else:
+                                self.emergency_close_count += 1
+                        else:
+                            # no need to close, so keep the position open
+                            decisions.append(
+                                Decision(
+                                    position=position,
+                                    old_action=PositionType.LONG,
+                                    new_action=PositionType.LONG)
+                            )
 
-                elif position.position_type is PositionType.SHORT:
+                    elif position.position_type is PositionType.SHORT:
 
-                    natural_close_required = coint_pair.recent_dev_scaled > -self.exit_z
-                    emergency_close_required = coint_pair.recent_dev_scaled < (position.init_z - self.emergency_delta_z)
+                        natural_close_required = coint_pair.recent_dev_scaled > -self.exit_z
+                        emergency_close_required = coint_pair.recent_dev_scaled < (position.init_z - self.emergency_delta_z)
 
-                    if natural_close_required or emergency_close_required:
-                        decisions.append(
-                            Decision(
-                                position=position,
-                                old_action=PositionType.SHORT,
-                                new_action=PositionType.NOT_INVESTED)
-                        )
-                    else:
-                        # no need to close, so keep the position open
-                        decisions.append(
-                            Decision(
-                                position=position,
-                                old_action=PositionType.SHORT,
-                                new_action=PositionType.SHORT)
-                        )
-
+                        if natural_close_required or emergency_close_required:
+                            decisions.append(
+                                Decision(
+                                    position=position,
+                                    old_action=PositionType.SHORT,
+                                    new_action=PositionType.NOT_INVESTED)
+                            )
+                            if natural_close_required:
+                                self.natural_close_count += 1
+                            else:
+                                self.emergency_close_count += 1
+                        else:
+                            # no need to close, so keep the position open
+                            decisions.append(
+                                Decision(
+                                    position=position,
+                                    old_action=PositionType.SHORT,
+                                    new_action=PositionType.SHORT)
+                            )
+        print("open count: ", self.open_count)
+        print("natural close count: ", self.natural_close_count)
+        print("emergency close count: ", self.emergency_close_count)
+        print("time stop-loss close count: ", self.time_stop_loss_count)
         return decisions

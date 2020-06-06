@@ -117,7 +117,8 @@ class PairTrader:
             print(
                 f"---- Window start: {self.current_window.window_start}, Window length: {self.current_window.window_length}, Days alive: {self.days_alive}")
             self.__evolve()
-        # self.portfolio.summary()
+        self.portfolio.get_port_hist().to_csv('log.csv')
+        self.portfolio.summary()
         return
 
     def __evolve(self):
