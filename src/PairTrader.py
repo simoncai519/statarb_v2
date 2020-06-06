@@ -123,7 +123,7 @@ class PairTrader:
     def __evolve(self):
         # Do all the things to push the window forward to next working day
         # Adjust static parameters
-        self.window_length += timedelta(days=1)
+        # self.window_length += timedelta(days=1)
         self.days_alive += 1
         self.day_count+=1
         self.today = self.trading_days[-1]

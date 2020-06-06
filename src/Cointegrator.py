@@ -108,6 +108,7 @@ class Cointegrator:
 
             if is_cointegrated:
                 n_cointegrated += 1
+                print(n_cointegrated, "/ 150 cointegrated")
                 r_x = self.__log_returner(t1)
                 mu_x_ann = float(250 * np.mean(r_x))
                 sigma_x_ann = float(250 ** 0.5 * np.std(r_x))
